@@ -1,0 +1,997 @@
+{
+  "name": "multi-ai-channel",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "website-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d330f9a4-72ba-4e38-baad-973da20af898",
+      "name": "website ",
+      "webhookId": "38f2926f-c98a-47d7-9173-7ab3c662af83"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "82515f25-088c-4b33-af59-4889a874645b",
+              "name": "customerName",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2bbf84e3-4a84-4ca2-ac8f-3826e574d79b",
+              "name": "customerEmail",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "4abbe705-9ca7-4111-9995-f8a22b2e2ac9",
+              "name": "customerPhone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "de3bcf08-9150-4c7f-9c1f-2ae12ec94d74",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "c05f9e58-c470-4dd2-832c-2fc9bb8c0d51",
+              "name": "channel",
+              "value": "={{ $json.body.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "9bb4c902-e478-41fe-9a9f-472f7c94e275",
+              "name": "timestamp",
+              "value": "={{ $now .format('yyyy-MM-dd')}}",
+              "type": "string"
+            },
+            {
+              "id": "c7e3be92-9e6c-4fcb-9740-5ef8b1c5a97b",
+              "name": "messageId",
+              "value": "={{ 'MSG-' + $now.toMillis() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "4e9a01db-5557-4a5a-badc-8900a13f57f7",
+      "name": "Extract CostumerId"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $json.customerEmail }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "51e81cf3-f944-4a65-aff6-a7f44bae0f30",
+      "name": "Search Costumer",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3e6fc097-4f4f-4723-bbe5-666043c72cb2",
+              "leftValue": "={{ $('Search Costumer').all()[0].json.id }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        0
+      ],
+      "id": "cdc92a37-a0c4-46bc-ad4c-74b8d29bbcde",
+      "name": "Costumer Exit"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Search Costumer').all()[0].json.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "last_interaction",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.timestamp }}"
+            },
+            {
+              "fieldId": "preferred_channel",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.channel }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        96
+      ],
+      "id": "6b1a840d-442f-4dec-aec5-a71d131ad0a9",
+      "name": "Update ExistingCustomer",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "customers",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "=\t{{ $('Extract CostumerId').item.json.customerName }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.customerEmail }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.customerPhone }}"
+            },
+            {
+              "fieldId": "preferred_channel",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.channel }}"
+            },
+            {
+              "fieldId": "first_interaction",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.timestamp }}"
+            },
+            {
+              "fieldId": "last_interaction",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.timestamp }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "active"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "Individual"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        896,
+        -96
+      ],
+      "id": "c1dbb9b2-5d94-4c50-ac7c-d86483df9e58",
+      "name": "Create NewCostumer",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "conversations",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "customer_id",
+              "fieldValue": "={{ $if($('Create NewCostumer').isExecuted, $('Create NewCostumer').item.json.id, $('Search Costumer').all()[0].json.id) }}"
+            },
+            {
+              "fieldId": "channel",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.channel }}"
+            },
+            {
+              "fieldId": "message_id",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.messageId }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.message }}"
+            },
+            {
+              "fieldId": "sender_type",
+              "fieldValue": "customer"
+            },
+            {
+              "fieldId": "timestamp",
+              "fieldValue": "={{ $('Extract CostumerId').item.json.timestamp }}"
+            },
+            {
+              "fieldId": "intent",
+              "fieldValue": "pending"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "pending"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -32
+      ],
+      "id": "910f8240-c52f-4bf6-9a56-b06f737a16b5",
+      "name": "Save Conservation ",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are an AI customer support assistant for OreGlow Skincare.\n\nPRODUCTS:\n{{ $('Fetch Product').all().map(p => `- ${p.json.name} (${p.json.price}): ${p.json.description}. Benefits: ${p.json.benefits}. How to use: ${p.json.how_to_use}`).join('\\n') }}\n\nFAQS:\n{{ $('Fetch Faqs').all().map(f => `Q: ${f.json.question}\\nA: ${f.json.answer}`).join('\\n') }}\n\nPOLICIES:\n{{ $('Fetch Policies').all().map(p => `${p.json.type}: ${p.json.content}`).join('\\n') }}\n\nCONVERSATION HISTORY (last 5 interactions):\n{{ $('Fetch History').all().length > 0 ? $('Fetch History').all().map(c => `[${c.json.channel}] Customer: ${c.json.message} | AI: ${c.json.response}`).join('\\n') : 'No previous conversations' }}\n\nYOUR RULES:\n- Be friendly and professional\n- Only use information from the knowledge base above\n- Never invent prices, policies or product details\n- If information is not in the knowledge base respond politely and say you will find out more\n- Use the conversation history to continue naturally without asking the customer to repeat themselves\n- If the customer previously asked about a product reference it naturally in your response\n- Format responses based on channel:\n  * website: conversational, 2-3 sentences\n  * email: formal with greeting and sign off\n  * whatsapp: very short, casual, max 2 sentences\n\nESCALATION RULES - only set escalate to true when:\n- Customer explicitly asks for a human, manager or real person\n- Customer mentions legal action, lawsuit or threats\n- Customer reports a physical injury or severe allergic reaction\n- Customer is extremely angry with repeated complaints and AI cannot resolve\n- For ALL other questions set escalate to false\n- If information is not in knowledge base respond politely but do NOT escalate\n- Product questions, pricing, shipping, ingredients always set escalate to false\n\nCustomer Name: {{ $('Extract CostumerId').item.json.customerName }}\nChannel: {{ $('Extract CostumerId').item.json.channel }}\nCustomer Message: {{ $('Extract CostumerId').item.json.message }}\n\nDETECT INTENT from:\nproduct_inquiry, pricing, order_information, complaint, technical_support, appointment, general_question, human_assistance\n\nALWAYS respond in this exact JSON format:\n{\n  \"intent\": \"detected intent here\",\n  \"urgency\": \"low or medium or high\",\n  \"response\": \"your reply here formatted for the channel\",\n  \"escalate\": false or true,\n  \"key_info\": \"one line summary\",\n  \"response_type\": \"informational or action_required or escalation\"\n}"
+            },
+            {
+              "content": "=Customer Name: {{ $('Extract CostumerId').item.json.customerName }}\nChannel: {{ $('Extract CostumerId').item.json.channel }}\nMessage: {{ $('Extract CostumerId').item.json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        2320,
+        -32
+      ],
+      "id": "98ce870e-ee8e-41c3-af3f-e2a03976b40f",
+      "name": "Ai Brain",
+      "executeOnce": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "c4IeGRKBOkmzBxEr",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $input.first().json.output[0].content[0].text;\nconst parsed = JSON.parse(aiOutput);\n\nreturn {\n  intent: parsed.intent,\n  urgency: parsed.urgency,\n  response: parsed.response,\n  escalate: parsed.escalate,\n  key_info: parsed.key_info,\n  response_type: parsed.response_type\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2688,
+        -32
+      ],
+      "id": "7a500506-b8e8-4648-8c36-145e7ddec1bc",
+      "name": "Clean AiResponse"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "conversations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "message_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Extract CostumerId').item.json.messageId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "intent",
+              "fieldValue": "={{ $json.intent }}"
+            },
+            {
+              "fieldId": "response",
+              "fieldValue": "={{ $json.response }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        272
+      ],
+      "id": "687f8121-870c-43ed-bd47-c83c3a6484b9",
+      "name": "Update Conservation",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "products",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        -32
+      ],
+      "id": "4bb0ecb8-9054-4e71-815d-a1c1691b547f",
+      "name": "Fetch Product",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "faqs",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        -32
+      ],
+      "id": "26739733-c769-4fcd-9b60-8b0acbf1bcdb",
+      "name": "Fetch Faqs",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "policies",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1872,
+        -32
+      ],
+      "id": "d30f722a-8820-4858-ad52-e08155a2744a",
+      "name": "Fetch Policies",
+      "alwaysOutputData": false,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Clean AiResponse').item.json.response }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2960,
+        240
+      ],
+      "id": "72ffa20b-e1a6-4a03-8f26-5371eae3f6df",
+      "name": "Website_Reply"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Extract CostumerId').item.json.customerEmail }}",
+        "subject": "Re: Your OreGlow Skincare Inquiry",
+        "message": "=Dear {{ $('Extract CostumerId').item.json.customerName }},  Thank you for contacting OreGlow Skincare.  {{ $('Clean AiResponse').item.json.response }}  Warm regards,\nOreGlow Support Team \nsupport@oreglow.com",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2960,
+        416
+      ],
+      "id": "10661e58-d5f8-4569-9bd4-a3e94e2d6c30",
+      "name": "Email_Reply",
+      "webhookId": "3bceb5e0-74c6-41c8-9b43-c52da0b03d88",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ljF8rdhHOxFz8gQR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2eed7a2d-c599-4553-905b-9deea138e47b",
+              "name": "whatsappResponse",
+              "value": "={{ $('Clean AiResponse').item.json.response }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2880,
+        592
+      ],
+      "id": "0d3d8810-428a-40b5-a30e-eba6354dbd97",
+      "name": "Whatsapp_Reply"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract CostumerId').item.json.channel }}",
+                    "rightValue": "website",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "9924e9f9-390c-47ed-baaf-e0e479004aea"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Website"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f7578e6d-5220-4ab8-902b-a38c6dcf91f6",
+                    "leftValue": "={{ $('Extract CostumerId').item.json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "929896c3-05b1-4f7e-9801-0eaa3c1692b9",
+                    "leftValue": "={{ $('Extract CostumerId').item.json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Whatsapp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2736,
+        256
+      ],
+      "id": "cd410387-b6df-4fee-a563-1b778205b866",
+      "name": "Route_By_Channel"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "conversations",
+        "limit": 5,
+        "orderBy": "timestamp.desc",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "customer_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Search Costumer').all()[0]?.json?.id ?? $('Create NewCostumer').item?.json?.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        -32
+      ],
+      "id": "a6b9bbbd-e478-4925-bb67-417ae266c64e",
+      "name": "Fetch History",
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f38a09d7-1d49-4739-9613-b42d1583b3fd",
+              "leftValue": "={{ $json.escalate }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2880,
+        -32
+      ],
+      "id": "62eed516-5f52-4584-841e-512dd94346ae",
+      "name": "Escalation Check"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ca978857-a701-44c9-a328-504944281d5b",
+              "name": "summary",
+              "value": "=🚨 CUSTOMER NEEDS HUMAN ASSISTANCE  Customer Name: {{ $('Extract CostumerId').item.json.customerName }} \nEmail: {{ $('Extract CostumerId').item.json.customerEmail }} \nPhone: {{ $('Extract CostumerId').item.json.customerPhone }} \nChannel: {{ $('Extract CostumerId').item.json.channel }}\nDate: {{ $('Extract CostumerId').item.json.timestamp }} \nCUSTOMER MESSAGE: {{ $('Extract CostumerId').item.json.message }} \nAI ANALYSIS: Intent: {{ $('Clean AiResponse').item.json.intent }} \nUrgency: {{ $('Clean AiResponse').item.json.urgency }}\nKey Info: {{ $('Clean AiResponse').item.json.key_info }} \nCONVERSATION HISTORY: {{ $('Fetch History').all().map(c => `[${c.json.channel}] ${c.json.message}`).join('\\n') }}  Please contact this customer as soon as possible.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3136,
+        -48
+      ],
+      "id": "6cb86328-a23a-47e9-ad91-d0dd48fb1502",
+      "name": "Escalation Summary"
+    },
+    {
+      "parameters": {
+        "sendTo": "ayobami1saac234@gmail.com",
+        "subject": "🚨 OreGlow — Customer Needs Human Help",
+        "message": "={{ $json.summary }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3360,
+        -48
+      ],
+      "id": "fb3a74a7-18e2-468e-b971-868adfe1f551",
+      "name": "Escalation Email",
+      "webhookId": "d8a99ba7-2ead-439a-b301-634584ac26cb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "ljF8rdhHOxFz8gQR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "customers",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('Search Costumer').all()[0]?.json?.id ?? $('Create NewCostumer').item?.json?.id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "escalated"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3584,
+        -48
+      ],
+      "id": "c3fa2011-ccd6-4d9a-91fe-10183de79126",
+      "name": "Update Costumer_Status",
+      "credentials": {
+        "supabaseApi": {
+          "id": "9VN6x35s4d9PMUCI",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "website ": {
+      "main": [
+        [
+          {
+            "node": "Extract CostumerId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract CostumerId": {
+      "main": [
+        [
+          {
+            "node": "Search Costumer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Costumer": {
+      "main": [
+        [
+          {
+            "node": "Costumer Exit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Costumer Exit": {
+      "main": [
+        [
+          {
+            "node": "Create NewCostumer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update ExistingCustomer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create NewCostumer": {
+      "main": [
+        [
+          {
+            "node": "Save Conservation ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update ExistingCustomer": {
+      "main": [
+        [
+          {
+            "node": "Save Conservation ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Conservation ": {
+      "main": [
+        [
+          {
+            "node": "Fetch Product",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ai Brain": {
+      "main": [
+        [
+          {
+            "node": "Clean AiResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean AiResponse": {
+      "main": [
+        [
+          {
+            "node": "Escalation Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Product": {
+      "main": [
+        [
+          {
+            "node": "Fetch Faqs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Faqs": {
+      "main": [
+        [
+          {
+            "node": "Fetch Policies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Policies": {
+      "main": [
+        [
+          {
+            "node": "Fetch History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Conservation": {
+      "main": [
+        [
+          {
+            "node": "Route_By_Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route_By_Channel": {
+      "main": [
+        [
+          {
+            "node": "Website_Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email_Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Whatsapp_Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch History": {
+      "main": [
+        [
+          {
+            "node": "Ai Brain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation Check": {
+      "main": [
+        [
+          {
+            "node": "Escalation Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Conservation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation Summary": {
+      "main": [
+        [
+          {
+            "node": "Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Escalation Email": {
+      "main": [
+        [
+          {
+            "node": "Update Costumer_Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b59f76f8-a0c4-4aae-b0eb-4dc1c1aa4ba4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bde954a890e2b6e930bd4832556bd6fb551e51b0af8ac750b6c4e22ac06e2a78"
+  },
+  "nodeGroups": [],
+  "id": "1I9UAtR6PHErD5jM",
+  "tags": []
+}
