@@ -40,10 +40,10 @@ Update CRM + Conversation Log
 n8n · OpenAI GPT-4o-mini · Supabase · Gmail · WhatsApp · Railway · Postman
 
 ## Workflow
+<img width="960" height="436" alt="Screenshot 2026-10-05 064344" src="https://github.com/user-attachments/assets/d0ce901d-d1b4-42ef-a416-9911581d77bb" />
 <img width="960" height="444" alt="Screenshot 2026-10-05 071858" src="https://github.com/user-attachments/assets/c124a686-67b4-48bc-ae17-b0f058784179" />
 <img width="960" height="437" alt="Screenshot 2026-10-05 074007" src="https://github.com/user-attachments/assets/2d0450f1-42d5-4096-b159-08270e517160" />
 <img width="960" height="436" alt="Screenshot 2026-10-05 073944" src="https://github.com/user-attachments/assets/5b391641-d800-46ea-9232-d4362f9f4c26" />
-<img width="960" height="436" alt="Screenshot 2026-10-05 064344" src="https://github.com/user-attachments/assets/d0ce901d-d1b4-42ef-a416-9911581d77bb" />
 
 ## Import it into your own n8n
 1. Download `multi-ai-channel.json` from this repo
